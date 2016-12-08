@@ -57,10 +57,12 @@ namespace HexagonGame.Editor {
 				HexagonGameBoard.HexagonGameCellProperties cellProperties = hexagonGameBoard.CellProperties;
 
 				EditorGUILayout.BeginHorizontal ();
+				EditorGUILayout.LabelField ("Empty Color: ", labelOptions);
+				cellProperties.EmptyBackgroundColor = (Color)EditorGUILayout.ColorField (cellProperties.EmptyBackgroundColor);
 				EditorGUILayout.LabelField ("Hexagon Mask: ", labelOptions);
-				cellProperties.MaskImage = EditorGUILayout.ObjectField (cellProperties.MaskImage, typeof(RawImage), false) as RawImage;
+				cellProperties.MaskImage = EditorGUILayout.ObjectField (cellProperties.MaskImage, typeof(Texture), false) as Texture;
 				EditorGUILayout.LabelField ("Background Image: ", labelOptions);
-				cellProperties.BackgroundImage = EditorGUILayout.ObjectField (cellProperties.BackgroundImage, typeof(RawImage), false) as RawImage;
+				cellProperties.BackgroundImage = EditorGUILayout.ObjectField (cellProperties.BackgroundImage, typeof(Texture), false) as Texture;
 				EditorGUILayout.EndHorizontal ();
 
 				EditorGUILayout.BeginHorizontal ();
@@ -70,10 +72,12 @@ namespace HexagonGame.Editor {
 				cellProperties.ForegroundFontSize = EditorGUILayout.IntField (cellProperties.ForegroundFontSize);
 				EditorGUILayout.LabelField ("Text Color: ", labelOptions);
 				cellProperties.ForegroundFontColor = (Color)EditorGUILayout.ColorField (cellProperties.ForegroundFontColor);
-
 				EditorGUILayout.EndHorizontal ();
 
 				EditorGUILayout.EndVertical ();
+			}
+			if (GUILayout.Button ("Make Game Board")) {
+				hexagonGameBoard.GetComponent<HexagonGameBoard> ().makeGameBoard ();
 			}
 
 			serializedObject.ApplyModifiedProperties ();
