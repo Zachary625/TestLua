@@ -47,6 +47,7 @@
   <ItemGroup>
      <Compile Include="Assets\Scripts\Common\LuaBehaviour.cs" />
      <Compile Include="Assets\Scripts\Common\LuaComponent.cs" />
+     <Compile Include="Assets\Scripts\Demo\HexagonGameBoard.cs" />
      <Compile Include="Assets\Scripts\Manager\Dto.cs" />
      <Compile Include="Assets\Scripts\Manager\GameStart.cs" />
      <Compile Include="Assets\Scripts\Utility\Util.cs" />

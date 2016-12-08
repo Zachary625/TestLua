@@ -54,6 +54,7 @@
      <Compile Include="Assets\Editor\Wrap\ToLua_System_String.cs" />
      <Compile Include="Assets\Editor\Wrap\ToLua_System_Type.cs" />
      <Compile Include="Assets\Editor\Wrap\ToLua_UnityEngine_Object.cs" />
+     <Compile Include="Assets\Scripts\Demo\Editor\HexagonGameBoardEditor.cs" />
      <None Include="Assets\uLua\README.txt" />
      <None Include="Assets\uLua\Examples\04_ScriptsFromFile\ScriptsFromFile01.lua.txt" />
      <None Include="Assets\Lua\System\readme.txt" />
@@ -81,6 +82,9 @@
  <Reference Include="UnityEditor.TreeEditor">
  <HintPath>/Applications/Unity/Unity.app/Contents/UnityExtensions/Unity/TreeEditor/Editor/UnityEditor.TreeEditor.dll</HintPath>
  </Reference>
+ <Reference Include="Debuger">
+ <HintPath>/Users/chi.a.zhang/Documents/Zachary/Projects/TestLua/TestLua/Assets/Plugins/Debuger.dll</HintPath>
+ </Reference>
  <Reference Include="UnityEditor.Graphs">
  <HintPath>/Applications/Unity/Unity.app/Contents/Managed/UnityEditor.Graphs.dll</HintPath>
  </Reference>
@@ -92,9 +96,6 @@
  </Reference>
  <Reference Include="UnityEditor.OSXStandalone.Extensions">
  <HintPath>/Applications/Unity/Unity.app/Contents/PlaybackEngines/MacStandaloneSupport/UnityEditor.OSXStandalone.Extensions.dll</HintPath>
- </Reference>
- <Reference Include="Debuger">
- <HintPath>/Users/chi.a.zhang/Documents/Zachary/Projects/TestLua/TestLua/Assets/Plugins/Debuger.dll</HintPath>
  </Reference>
   </ItemGroup>
   <ItemGroup>
