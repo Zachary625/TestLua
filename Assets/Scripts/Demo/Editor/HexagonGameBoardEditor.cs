@@ -59,6 +59,11 @@ namespace HexagonGame.Editor {
 				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Empty Color: ", labelOptions);
 				cellProperties.EmptyBackgroundColor = (Color)EditorGUILayout.ColorField (cellProperties.EmptyBackgroundColor);
+				EditorGUILayout.LabelField ("Empty Image: ", labelOptions);
+				cellProperties.EmptyBackgroundImage = EditorGUILayout.ObjectField (cellProperties.EmptyBackgroundImage, typeof(Texture), false) as Texture;
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Hexagon Mask: ", labelOptions);
 				cellProperties.MaskImage = EditorGUILayout.ObjectField (cellProperties.MaskImage, typeof(Texture), false) as Texture;
 				EditorGUILayout.LabelField ("Background Image: ", labelOptions);

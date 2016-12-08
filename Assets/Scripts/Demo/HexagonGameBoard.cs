@@ -79,6 +79,7 @@ namespace HexagonGame {
 			public Texture MaskImage;
 
 			public Color EmptyBackgroundColor = Color.gray;
+			public Texture EmptyBackgroundImage;
 			public Texture BackgroundImage;
 			public Font ForegroundFont;
 			public int ForegroundFontSize = 14;
@@ -191,6 +192,7 @@ namespace HexagonGame {
 			cellBgRectTransform.offsetMax = Vector2.zero;
 
 			RawImage cellBgImage = cellBackgroundGameObject.AddComponent<RawImage> ();
+			cellBgImage.texture = this.CellProperties.EmptyBackgroundImage;
 			cellBgImage.color = this.CellProperties.EmptyBackgroundColor;
 		}
 
