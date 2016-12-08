@@ -1,10 +1,9 @@
 ﻿<Properties StartupItem="Assembly-CSharp.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/Demo/Editor/HexagonGameBoardEditor.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/Demo/HexagonGameBoard.cs">
     <Files>
-      <File FileName="Assets/Scripts/Demo/HexagonGameBoard.cs" Line="39" Column="49" />
-      <File FileName="Assets/Editor/Packager.cs" Line="115" Column="46" />
-      <File FileName="Assets/Scripts/Demo/Editor/HexagonGameBoardEditor.cs" Line="33" Column="59" />
+      <File FileName="Assets/Scripts/Demo/HexagonGameBoard.cs" Line="16" Column="14" />
+      <File FileName="Assets/Scripts/Demo/Editor/HexagonGameBoardEditor.cs" Line="20" Column="37" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

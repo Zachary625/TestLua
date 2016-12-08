@@ -7,6 +7,16 @@ namespace HexagonGame {
 	[DisallowMultipleComponent]
 	[RequireComponent(typeof(RectTransform))]
 	public class HexagonGameBoard : MonoBehaviour {
+		public enum Direction {
+			OClock_0,
+			OClock_2,
+			OClock_4,
+			OClock_6,
+			OClock_8,
+			OClock_10,
+		}
+
+
 		public class HexagonGameBoardProperties {
 			public float CellSize = 10;
 			public float CellGap = 2;
