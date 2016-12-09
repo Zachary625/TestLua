@@ -7,6 +7,7 @@ using UnityEngine.UI;
 namespace HexagonGame {
 	[DisallowMultipleComponent]
 	[RequireComponent(typeof(RectTransform))]
+	[System.Serializable]
 	public class HexagonGameBoard : MonoBehaviour {
 		public enum Direction {
 			OClock_2,
@@ -35,6 +36,7 @@ namespace HexagonGame {
 			new Vector2(Mathf.Cos(Mathf.Deg2Rad * 90), Mathf.Sin(Mathf.Deg2Rad * 90)),			
 		};
 
+		[System.Serializable]
 		public class HexagonGameBoardProperties {
 			public float CellSize = 40;
 			public float CellGap = 5;
@@ -54,6 +56,8 @@ namespace HexagonGame {
 		}
 
 		public HexagonGameBoardProperties BoardProperties = new HexagonGameBoardProperties();
+
+		[System.Serializable]
 		public class HexagonGameCellProperties
 		{
 			public Texture MaskImage;

@@ -182,6 +182,11 @@ namespace HexagonGame.Editor {
 			}
 
 			serializedObject.ApplyModifiedProperties ();
+
+			if (GUI.changed) {
+				EditorUtility.SetDirty(this.target);
+			}
+
 		}
 	}
 }
