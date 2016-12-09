@@ -62,11 +62,12 @@ namespace HexagonGame {
 			public Color CellBgColor = Color.white;
 
 			public Texture BlockBgImage;
-			public Color BlockBgColor = Color.white;
+			public Color BlockBgMinColor = Color.white;
+			public Color BlockBgMaxColor = Color.white;
 
 			public Font FgFont;
-			public int FgFontSize = 14;
-			public Color FgFontColor = Color.red;
+			public int FgFontSize = 24;
+			public Color FgFontColor = Color.white;
 		}
 
 		public HexagonGameCellProperties CellProperties = new HexagonGameCellProperties();
@@ -242,7 +243,7 @@ namespace HexagonGame {
 		private void _destroyBlocks() {
 			this._blocksAnchor = this.transform.Find ("BlocksAnchor").gameObject;
 			while (this._blocksAnchor.transform.childCount > 0) {
-				GameObject blockGameObject = this._cellsAnchor.transform.GetChild(0).gameObject;
+				GameObject blockGameObject = this._blocksAnchor.transform.GetChild(0).gameObject;
 				blockGameObject.transform.SetParent (null);
 				if (Application.isEditor) {
 					DestroyImmediate (blockGameObject);
@@ -273,6 +274,8 @@ namespace HexagonGame {
 			RectTransform blockRectTransform = blockGameObject.AddComponent<RectTransform> ();
 			blockRectTransform.SetParent (this._blocksAnchor.transform);
 
+			HexagonGameBlock blockComponent = blockGameObject.AddComponent<HexagonGameBlock> ();
+
 			RawImage cellMaskImage = blockGameObject.AddComponent<RawImage> ();
 			cellMaskImage.texture = this.CellProperties.MaskImage;
 
@@ -293,7 +296,7 @@ namespace HexagonGame {
 
 			RawImage blockBgImage = blockBackgroundGameObject.AddComponent<RawImage> ();
 			blockBgImage.texture = this.CellProperties.BlockBgImage;
-			blockBgImage.color = this.CellProperties.BlockBgColor;
+			blockBgImage.color = Color.Lerp(this.CellProperties.BlockBgMinColor, this.CellProperties.BlockBgMaxColor, blockComponent.Times * 1.0f / this.BoardProperties.RequireTimes);
 
 			GameObject blockTextGameObject = new GameObject ();
 			RectTransform blockTextRectTransform = blockTextGameObject.AddComponent<RectTransform> ();
@@ -303,7 +306,7 @@ namespace HexagonGame {
 			blockTextRectTransform.offsetMin = Vector2.zero;
 			blockTextRectTransform.offsetMax = Vector2.zero;
 
-			HexagonGameBlock blockComponent = blockTextGameObject.AddComponent<HexagonGameBlock> ();
+			Outline outline = blockTextGameObject.AddComponent<Outline> ();
 
 			Text blockText = blockTextGameObject.AddComponent<Text> ();
 			blockText.font = this.CellProperties.FgFont;
@@ -338,6 +341,24 @@ namespace HexagonGame {
 
 		private int _calculateCellIndex(int ring, int side, int sideIndex) {
 			return getCellsForSize (ring) + ring * side + sideIndex;
+		}
+
+		public void HandleDrag(Vector2 dragVector) {
+			// Debug.Log (" @ HexagonGameBoard.HandleDrag(): " + dragVector.ToString());
+			int direction = -1;
+			float angle = 360;
+			Vector2 dragDirection = dragVector.normalized;
+			for (int side = 0 ; side < _sideVertexPositions.Length; side++) {
+				Vector2 directionVector = _sideVertexPositions[side];
+				float tempAngle = Mathf.Max( Vector3.Angle (dragDirection, directionVector), Vector3.Angle(directionVector, dragDirection));
+				if (tempAngle < angle) {
+					angle = tempAngle;
+					direction = side;
+				}
+			}
+			if (angle < 7) {
+				Debug.Log (" @ HexagonGameBoard.HandleDrag(): " + ((Direction)direction).ToString());
+			}
 		}
 
 		public static int getBlockNum(int unit, int times) {

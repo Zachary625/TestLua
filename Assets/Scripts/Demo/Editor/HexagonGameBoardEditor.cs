@@ -30,8 +30,14 @@ namespace HexagonGame.Editor {
 				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Size: ", labelOptions);
 				boardProperties.Size = EditorGUILayout.IntField (boardProperties.Size);
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Cell Size: ", labelOptions);
 				boardProperties.CellSize = EditorGUILayout.FloatField (boardProperties.CellSize);
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Cell Gap: ", labelOptions);
 				boardProperties.CellGap = EditorGUILayout.FloatField (boardProperties.CellGap);
 				EditorGUILayout.EndHorizontal ();
@@ -39,6 +45,9 @@ namespace HexagonGame.Editor {
 				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Move Time: ", labelOptions);
 				boardProperties.MoveTime = EditorGUILayout.FloatField (boardProperties.MoveTime);
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Generate Time: ", labelOptions);
 				boardProperties.GenerateTime = EditorGUILayout.FloatField (boardProperties.GenerateTime);
 				EditorGUILayout.EndHorizontal ();
@@ -46,10 +55,19 @@ namespace HexagonGame.Editor {
 				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("News Per Move: ", labelOptions);
 				boardProperties.NewsPerMove = EditorGUILayout.IntField (boardProperties.NewsPerMove);
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Unit Num: ", labelOptions);
 				boardProperties.UnitNum = EditorGUILayout.IntField (boardProperties.UnitNum);
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Require Times: ", labelOptions);
 				boardProperties.RequireTimes = EditorGUILayout.IntField (boardProperties.RequireTimes);
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Goal: " + HexagonGameBoard.getBlockNum(boardProperties.UnitNum, boardProperties.RequireTimes));
 				EditorGUILayout.EndHorizontal ();
 
@@ -89,13 +107,24 @@ namespace HexagonGame.Editor {
 				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Cell Bg Color: ", labelOptions);
 				cellProperties.CellBgColor = (Color)EditorGUILayout.ColorField (cellProperties.CellBgColor);
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Cell Bg Image: ", labelOptions);
 				cellProperties.CellBgImage = EditorGUILayout.ObjectField (cellProperties.CellBgImage, typeof(Texture), false) as Texture;
 				EditorGUILayout.EndHorizontal ();
 
 				EditorGUILayout.BeginHorizontal ();
-				EditorGUILayout.LabelField ("Block Bg Color: ", labelOptions);
-				cellProperties.BlockBgColor = (Color)EditorGUILayout.ColorField (cellProperties.BlockBgColor);
+				EditorGUILayout.LabelField ("Block Bg Min Color: ", labelOptions);
+				cellProperties.BlockBgMinColor = (Color)EditorGUILayout.ColorField (cellProperties.BlockBgMinColor);
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
+				EditorGUILayout.LabelField ("Block Bg Max Color: ", labelOptions);
+				cellProperties.BlockBgMaxColor = (Color)EditorGUILayout.ColorField (cellProperties.BlockBgMaxColor);
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Block Bg Image: ", labelOptions);
 				cellProperties.BlockBgImage = EditorGUILayout.ObjectField (cellProperties.BlockBgImage, typeof(Texture), false) as Texture;
 				EditorGUILayout.EndHorizontal ();
@@ -103,8 +132,14 @@ namespace HexagonGame.Editor {
 				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Fg Font: ", labelOptions);
 				cellProperties.FgFont = EditorGUILayout.ObjectField (cellProperties.FgFont, typeof(Font), false) as Font;
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Fg Font Size: ", labelOptions);
 				cellProperties.FgFontSize = EditorGUILayout.IntField (cellProperties.FgFontSize);
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Fg Font Color: ", labelOptions);
 				cellProperties.FgFontColor = (Color)EditorGUILayout.ColorField (cellProperties.FgFontColor);
 				EditorGUILayout.EndHorizontal ();
@@ -124,6 +159,15 @@ namespace HexagonGame.Editor {
 				this._clearToMake = false;
 				EditorGUILayout.HelpBox ("Block Bg Image is null!", MessageType.Error);
 			}
+			if (cellProperties.FgFont == null) {
+				this._clearToMake = false;
+				EditorGUILayout.HelpBox ("Fg Font is null!", MessageType.Error);
+			}
+			if (cellProperties.FgFontSize <= 0) {
+				this._clearToMake = false;
+				EditorGUILayout.HelpBox ("Fg Font Size <= 0!", MessageType.Error);
+			}
+
 
 			if (GUILayout.Button ("Make Game Board")) {
 				if (this._clearToMake) {
@@ -132,7 +176,9 @@ namespace HexagonGame.Editor {
 			}
 
 			if (GUILayout.Button ("Make Game Blocks")) {
-				
+				if (this._clearToMake) {
+					hexagonGameBoard.GetComponent<HexagonGameBoard> ().makeGameBlocks ();
+				}
 			}
 
 			serializedObject.ApplyModifiedProperties ();
