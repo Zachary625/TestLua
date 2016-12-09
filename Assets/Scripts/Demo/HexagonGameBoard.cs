@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 using UnityEngine.UI;
 
@@ -47,6 +48,7 @@ namespace HexagonGame {
 			public float MoveTime = 0.3f;
 			public float GenerateTime = 0.3f;
 
+			public int NewsPerMove = 2;
 			public int UnitNum = 3;
 			public int RequireTimes = 10;
 		}
@@ -56,12 +58,15 @@ namespace HexagonGame {
 		{
 			public Texture MaskImage;
 
-			public Color EmptyBackgroundColor = Color.white;
-			public Texture EmptyBackgroundImage;
-			public Texture BackgroundImage;
-			public Font ForegroundFont;
-			public int ForegroundFontSize = 14;
-			public Color ForegroundFontColor = Color.red;
+			public Texture CellBgImage;
+			public Color CellBgColor = Color.white;
+
+			public Texture BlockBgImage;
+			public Color BlockBgColor = Color.white;
+
+			public Font FgFont;
+			public int FgFontSize = 14;
+			public Color FgFontColor = Color.red;
 		}
 
 		public HexagonGameCellProperties CellProperties = new HexagonGameCellProperties();
@@ -70,6 +75,8 @@ namespace HexagonGame {
 		private int[,] _cellAdjacency;
 		private int[] _blockStatusFront;
 		private int[] _blockStatusBack;
+		private GameObject[] _blockGameObjects;
+		private List<int> _emptyCells = new List<int>();
 
 		public enum HexagonGameBoardPhase {
 			None,
@@ -118,10 +125,18 @@ namespace HexagonGame {
 			return 1 + 3 * (size - 1) * size;
 		}
 
-
-
 		public void makeGameBoard() {
-			this._initCells ();
+			if (Application.isEditor) {
+				this._initCells ();
+			}
+		}
+
+		public void makeGameBlocks() {
+			if (Application.isEditor) {
+				this._destroyBlocks ();
+				this._blockGameObjects = new GameObject[this.BoardProperties.Cells];
+				this._initBlocks ();
+			}
 		}
 
 		private void _gotoPhase(HexagonGameBoardPhase phase) {
@@ -166,6 +181,7 @@ namespace HexagonGame {
 				for(int direction = 0; direction < 6; direction++) {
 					this._cellAdjacency [index, direction] = -1;
 				}
+				this._emptyCells.Add (index);
 				this._initCell (index);
 			}
 
@@ -183,25 +199,16 @@ namespace HexagonGame {
 								this._cellAdjacency [cellIndex, d] = adjacentIndex;
 								this._cellAdjacency [adjacentIndex, (d + 3) % 6] = cellIndex;
 
-								Debug.Log (" @ HexagonGameBoard._initCells(): " + cellIndex + " -> " + d + " = " + adjacentIndex);
+//								Debug.Log (" @ HexagonGameBoard._initCells(): " + cellIndex + " -> " + d + " = " + adjacentIndex);
 							}
 						}
 					}
 				}
 			}
-
-
-//			for (int ring = 0; ring < this.BoardProperties.Size; ring++) {
-//				for(int side = 0; side < 6; side++) {
-//					for (int sideIndex = 0; sideIndex < ring; sideIndex++) {
-//						this._initCell (this._calculateCellIndex(ring, side, sideIndex));
-//					}
-//				}				
-//			}
 		}
 
 		private void _initCell(int index) {
-			Vector2 position = this.getPositionForCell (index);
+			Vector2 position = this.getPositionForHexagon (index);
 			this._cellPositions [index] = position;
 
 			GameObject cellGameObject = new GameObject ();
@@ -219,7 +226,6 @@ namespace HexagonGame {
 			cellRectTransform.offsetMin = position - this._cellSize / 2;
 			cellRectTransform.offsetMax = position + this._cellSize / 2;
 
-
 			GameObject cellBackgroundGameObject = new GameObject ();
 			RectTransform cellBgRectTransform = cellBackgroundGameObject.AddComponent<RectTransform> ();
 			cellBgRectTransform.SetParent (cellRectTransform);
@@ -229,19 +235,86 @@ namespace HexagonGame {
 			cellBgRectTransform.offsetMax = Vector2.zero;
 
 			RawImage cellBgImage = cellBackgroundGameObject.AddComponent<RawImage> ();
-			cellBgImage.texture = this.CellProperties.EmptyBackgroundImage;
-			cellBgImage.color = this.CellProperties.EmptyBackgroundColor;
+			cellBgImage.texture = this.CellProperties.CellBgImage;
+			cellBgImage.color = this.CellProperties.CellBgColor;
 		}
 
-		private void _initBlock(int index, int times) {
-		
+		private void _destroyBlocks() {
+			this._blocksAnchor = this.transform.Find ("BlocksAnchor").gameObject;
+			while (this._blocksAnchor.transform.childCount > 0) {
+				GameObject blockGameObject = this._cellsAnchor.transform.GetChild(0).gameObject;
+				blockGameObject.transform.SetParent (null);
+				if (Application.isEditor) {
+					DestroyImmediate (blockGameObject);
+				} else {
+					Destroy (blockGameObject);
+				}
+			}
 		}
 
-		private void _destroyBlock(int index) {
-			
+
+		private void _initBlocks() {
+			this._blocksAnchor = this.transform.Find ("BlocksAnchor").gameObject;
+
+			// todo
+			for(int num = 0; num < this.BoardProperties.NewsPerMove; num++) {
+				int newIndex = this._emptyCells[Random.Range(0, this._emptyCells.Count)];
+				this._emptyCells.Remove (newIndex);
+				this._initBlock (newIndex);
+			}
 		}
 
-		public Vector2 getPositionForCell(int index) {
+		private void _initBlock(int index) {
+			Vector2 position = this.getPositionForHexagon (index);
+
+			GameObject blockGameObject = new GameObject ();
+			this._blockGameObjects [index] = blockGameObject;
+
+			RectTransform blockRectTransform = blockGameObject.AddComponent<RectTransform> ();
+			blockRectTransform.SetParent (this._blocksAnchor.transform);
+
+			RawImage cellMaskImage = blockGameObject.AddComponent<RawImage> ();
+			cellMaskImage.texture = this.CellProperties.MaskImage;
+
+			Mask cellMask = blockGameObject.AddComponent<Mask> ();
+			cellMask.showMaskGraphic = false;
+			blockRectTransform.anchorMin = Vector2.one / 2;
+			blockRectTransform.anchorMax = Vector2.one / 2;
+			blockRectTransform.offsetMin = position - this._cellSize / 2;
+			blockRectTransform.offsetMax = position + this._cellSize / 2;
+
+			GameObject blockBackgroundGameObject = new GameObject ();
+			RectTransform blockBgRectTransform = blockBackgroundGameObject.AddComponent<RectTransform> ();
+			blockBgRectTransform.SetParent (blockRectTransform);
+			blockBgRectTransform.anchorMin = Vector2.zero;
+			blockBgRectTransform.anchorMax = Vector2.one;
+			blockBgRectTransform.offsetMin = Vector2.zero;
+			blockBgRectTransform.offsetMax = Vector2.zero;
+
+			RawImage blockBgImage = blockBackgroundGameObject.AddComponent<RawImage> ();
+			blockBgImage.texture = this.CellProperties.BlockBgImage;
+			blockBgImage.color = this.CellProperties.BlockBgColor;
+
+			GameObject blockTextGameObject = new GameObject ();
+			RectTransform blockTextRectTransform = blockTextGameObject.AddComponent<RectTransform> ();
+			blockTextRectTransform.SetParent (blockRectTransform);
+			blockTextRectTransform.anchorMin = Vector2.zero;
+			blockTextRectTransform.anchorMax = Vector2.one;
+			blockTextRectTransform.offsetMin = Vector2.zero;
+			blockTextRectTransform.offsetMax = Vector2.zero;
+
+			HexagonGameBlock blockComponent = blockTextGameObject.AddComponent<HexagonGameBlock> ();
+
+			Text blockText = blockTextGameObject.AddComponent<Text> ();
+			blockText.font = this.CellProperties.FgFont;
+			blockText.fontSize = this.CellProperties.FgFontSize;
+			blockText.color = this.CellProperties.FgFontColor;
+			blockText.alignment = TextAnchor.MiddleCenter;
+			blockText.text = "" + getBlockNum (this.BoardProperties.UnitNum, blockComponent.Times);
+
+		}
+
+		public Vector2 getPositionForHexagon(int index) {
 			if (index == 0) {
 				return Vector2.zero;
 			} 
@@ -265,6 +338,10 @@ namespace HexagonGame {
 
 		private int _calculateCellIndex(int ring, int side, int sideIndex) {
 			return getCellsForSize (ring) + ring * side + sideIndex;
+		}
+
+		public static int getBlockNum(int unit, int times) {
+			return unit * (int)Mathf.Pow (2, times);
 		}
 	}
 }

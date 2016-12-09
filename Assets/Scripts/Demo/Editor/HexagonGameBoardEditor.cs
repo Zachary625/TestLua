@@ -44,11 +44,13 @@ namespace HexagonGame.Editor {
 				EditorGUILayout.EndHorizontal ();
 
 				EditorGUILayout.BeginHorizontal ();
+				EditorGUILayout.LabelField ("News Per Move: ", labelOptions);
+				boardProperties.NewsPerMove = EditorGUILayout.IntField (boardProperties.NewsPerMove);
 				EditorGUILayout.LabelField ("Unit Num: ", labelOptions);
 				boardProperties.UnitNum = EditorGUILayout.IntField (boardProperties.UnitNum);
 				EditorGUILayout.LabelField ("Require Times: ", labelOptions);
 				boardProperties.RequireTimes = EditorGUILayout.IntField (boardProperties.RequireTimes);
-				EditorGUILayout.LabelField ("Goal: " + boardProperties.UnitNum * Mathf.Pow(2, boardProperties.RequireTimes));
+				EditorGUILayout.LabelField ("Goal: " + HexagonGameBoard.getBlockNum(boardProperties.UnitNum, boardProperties.RequireTimes));
 				EditorGUILayout.EndHorizontal ();
 
 				EditorGUILayout.EndVertical ();
@@ -56,68 +58,79 @@ namespace HexagonGame.Editor {
 
 			if (boardProperties.CellSize <= 0) {
 				this._clearToMake = false;
-				EditorGUILayout.HelpBox (" Cell Size <= 0!", MessageType.Error);
+				EditorGUILayout.HelpBox ("Cell Size <= 0!", MessageType.Error);
 			}
 			if (boardProperties.CellGap < 0) {
 				this._clearToMake = false;
-				EditorGUILayout.HelpBox (" Cell Gap < 0!", MessageType.Error);
+				EditorGUILayout.HelpBox ("Cell Gap < 0!", MessageType.Error);
+			}
+			if (boardProperties.NewsPerMove <= 0) {
+				this._clearToMake = false;
+				EditorGUILayout.HelpBox ("News Per Move <= 0!", MessageType.Error);
 			}
 			if (boardProperties.UnitNum <= 0) {
 				this._clearToMake = false;
-				EditorGUILayout.HelpBox (" Unit Num <= 0!", MessageType.Error);
+				EditorGUILayout.HelpBox ("Unit Num <= 0!", MessageType.Error);
 			}
 			if (boardProperties.RequireTimes <= 0) {
 				this._clearToMake = false;
-				EditorGUILayout.HelpBox (" Require Times <= 0!", MessageType.Error);
+				EditorGUILayout.HelpBox ("Require Times <= 0!", MessageType.Error);
 			}
 
 			this._showCellProperties = EditorGUILayout.Foldout (this._showCellProperties, "Cell Properties");
 			if (this._showCellProperties) {
 				EditorGUILayout.BeginVertical ();
 
-				EditorGUILayout.BeginHorizontal ();
-				EditorGUILayout.LabelField ("Empty Color: ", labelOptions);
-				cellProperties.EmptyBackgroundColor = (Color)EditorGUILayout.ColorField (cellProperties.EmptyBackgroundColor);
-				EditorGUILayout.LabelField ("Empty Image: ", labelOptions);
-				cellProperties.EmptyBackgroundImage = EditorGUILayout.ObjectField (cellProperties.EmptyBackgroundImage, typeof(Texture), false) as Texture;
-				EditorGUILayout.EndHorizontal ();
-
-				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Hexagon Mask: ", labelOptions);
 				cellProperties.MaskImage = EditorGUILayout.ObjectField (cellProperties.MaskImage, typeof(Texture), false) as Texture;
-				EditorGUILayout.LabelField ("Background Image: ", labelOptions);
-				cellProperties.BackgroundImage = EditorGUILayout.ObjectField (cellProperties.BackgroundImage, typeof(Texture), false) as Texture;
+
+				EditorGUILayout.BeginHorizontal ();
+				EditorGUILayout.LabelField ("Cell Bg Color: ", labelOptions);
+				cellProperties.CellBgColor = (Color)EditorGUILayout.ColorField (cellProperties.CellBgColor);
+				EditorGUILayout.LabelField ("Cell Bg Image: ", labelOptions);
+				cellProperties.CellBgImage = EditorGUILayout.ObjectField (cellProperties.CellBgImage, typeof(Texture), false) as Texture;
 				EditorGUILayout.EndHorizontal ();
 
 				EditorGUILayout.BeginHorizontal ();
-				EditorGUILayout.LabelField ("Text Font: ", labelOptions);
-				cellProperties.ForegroundFont = EditorGUILayout.ObjectField (cellProperties.ForegroundFont, typeof(Font), false) as Font;
-				EditorGUILayout.LabelField ("Text Size: ", labelOptions);
-				cellProperties.ForegroundFontSize = EditorGUILayout.IntField (cellProperties.ForegroundFontSize);
-				EditorGUILayout.LabelField ("Text Color: ", labelOptions);
-				cellProperties.ForegroundFontColor = (Color)EditorGUILayout.ColorField (cellProperties.ForegroundFontColor);
+				EditorGUILayout.LabelField ("Block Bg Color: ", labelOptions);
+				cellProperties.BlockBgColor = (Color)EditorGUILayout.ColorField (cellProperties.BlockBgColor);
+				EditorGUILayout.LabelField ("Block Bg Image: ", labelOptions);
+				cellProperties.BlockBgImage = EditorGUILayout.ObjectField (cellProperties.BlockBgImage, typeof(Texture), false) as Texture;
+				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.BeginHorizontal ();
+				EditorGUILayout.LabelField ("Fg Font: ", labelOptions);
+				cellProperties.FgFont = EditorGUILayout.ObjectField (cellProperties.FgFont, typeof(Font), false) as Font;
+				EditorGUILayout.LabelField ("Fg Font Size: ", labelOptions);
+				cellProperties.FgFontSize = EditorGUILayout.IntField (cellProperties.FgFontSize);
+				EditorGUILayout.LabelField ("Fg Font Color: ", labelOptions);
+				cellProperties.FgFontColor = (Color)EditorGUILayout.ColorField (cellProperties.FgFontColor);
 				EditorGUILayout.EndHorizontal ();
 
 				EditorGUILayout.EndVertical ();
 			}
 
-			if (cellProperties.EmptyBackgroundImage == null) {
-				this._clearToMake = false;
-				EditorGUILayout.HelpBox (" Must assign a valid image for empty cell!", MessageType.Error);
-			}
-			if (cellProperties.BackgroundImage == null) {
-				this._clearToMake = false;
-				EditorGUILayout.HelpBox (" Must assign a valid image for block!", MessageType.Error);
-			}
 			if (cellProperties.MaskImage == null) {
 				this._clearToMake = false;
-				EditorGUILayout.HelpBox (" Must assign a valid mask image!", MessageType.Error);
+				EditorGUILayout.HelpBox ("Mask Image is null!", MessageType.Error);
+			}
+			if (cellProperties.CellBgImage == null) {
+				this._clearToMake = false;
+				EditorGUILayout.HelpBox ("Cell Bg Image is null!", MessageType.Error);
+			}
+			if (cellProperties.BlockBgImage == null) {
+				this._clearToMake = false;
+				EditorGUILayout.HelpBox ("Block Bg Image is null!", MessageType.Error);
 			}
 
 			if (GUILayout.Button ("Make Game Board")) {
 				if (this._clearToMake) {
 					hexagonGameBoard.GetComponent<HexagonGameBoard> ().makeGameBoard ();
 				}
+			}
+
+			if (GUILayout.Button ("Make Game Blocks")) {
+				
 			}
 
 			serializedObject.ApplyModifiedProperties ();
