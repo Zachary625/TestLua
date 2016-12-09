@@ -9,19 +9,22 @@ namespace HexagonGame.Editor {
 	public class HexagonGameBoardEditor : UnityEditor.Editor {
 		private bool _showBoardProperties = true;
 		private bool _showCellProperties = true;
+		private bool _clearToMake = false;
 
 		public override void OnInspectorGUI() {
 			serializedObject.Update ();
 
 			HexagonGameBoard hexagonGameBoard = this.target as HexagonGameBoard;
+			HexagonGameBoard.HexagonGameBoardProperties boardProperties = hexagonGameBoard.BoardProperties;
+			HexagonGameBoard.HexagonGameCellProperties cellProperties = hexagonGameBoard.CellProperties;
 
 			this.DrawDefaultInspector ();
 
 			GUILayoutOption[] labelOptions = new GUILayoutOption[]{ GUILayout.MinWidth(100) };
 
-			EditorGUILayout.BeginVertical ();
-			HexagonGameBoard.HexagonGameBoardProperties boardProperties = hexagonGameBoard.BoardProperties;
+			this._clearToMake = true;
 
+			EditorGUILayout.BeginVertical ();
 			this._showBoardProperties = EditorGUILayout.Foldout (this._showBoardProperties, "Board Properties");
 			if (this._showBoardProperties) {
 				EditorGUILayout.BeginHorizontal ();
@@ -51,10 +54,26 @@ namespace HexagonGame.Editor {
 				EditorGUILayout.EndVertical ();
 			}
 
+			if (boardProperties.CellSize <= 0) {
+				this._clearToMake = false;
+				EditorGUILayout.HelpBox (" Cell Size <= 0!", MessageType.Error);
+			}
+			if (boardProperties.CellGap < 0) {
+				this._clearToMake = false;
+				EditorGUILayout.HelpBox (" Cell Gap < 0!", MessageType.Error);
+			}
+			if (boardProperties.UnitNum <= 0) {
+				this._clearToMake = false;
+				EditorGUILayout.HelpBox (" Unit Num <= 0!", MessageType.Error);
+			}
+			if (boardProperties.RequireTimes <= 0) {
+				this._clearToMake = false;
+				EditorGUILayout.HelpBox (" Require Times <= 0!", MessageType.Error);
+			}
+
 			this._showCellProperties = EditorGUILayout.Foldout (this._showCellProperties, "Cell Properties");
 			if (this._showCellProperties) {
 				EditorGUILayout.BeginVertical ();
-				HexagonGameBoard.HexagonGameCellProperties cellProperties = hexagonGameBoard.CellProperties;
 
 				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Empty Color: ", labelOptions);
@@ -81,8 +100,24 @@ namespace HexagonGame.Editor {
 
 				EditorGUILayout.EndVertical ();
 			}
+
+			if (cellProperties.EmptyBackgroundImage == null) {
+				this._clearToMake = false;
+				EditorGUILayout.HelpBox (" Must assign a valid image for empty cell!", MessageType.Error);
+			}
+			if (cellProperties.BackgroundImage == null) {
+				this._clearToMake = false;
+				EditorGUILayout.HelpBox (" Must assign a valid image for block!", MessageType.Error);
+			}
+			if (cellProperties.MaskImage == null) {
+				this._clearToMake = false;
+				EditorGUILayout.HelpBox (" Must assign a valid mask image!", MessageType.Error);
+			}
+
 			if (GUILayout.Button ("Make Game Board")) {
-				hexagonGameBoard.GetComponent<HexagonGameBoard> ().makeGameBoard ();
+				if (this._clearToMake) {
+					hexagonGameBoard.GetComponent<HexagonGameBoard> ().makeGameBoard ();
+				}
 			}
 
 			serializedObject.ApplyModifiedProperties ();
