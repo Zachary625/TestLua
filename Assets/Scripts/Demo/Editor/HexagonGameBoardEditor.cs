@@ -81,8 +81,10 @@ namespace HexagonGame.Editor {
 			if (this._showCellProperties) {
 				EditorGUILayout.BeginVertical ();
 
+				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Hexagon Mask: ", labelOptions);
 				cellProperties.MaskImage = EditorGUILayout.ObjectField (cellProperties.MaskImage, typeof(Texture), false) as Texture;
+				EditorGUILayout.EndHorizontal ();
 
 				EditorGUILayout.BeginHorizontal ();
 				EditorGUILayout.LabelField ("Cell Bg Color: ", labelOptions);
