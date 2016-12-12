@@ -133,6 +133,7 @@ namespace HexagonGame {
 			this._position = position;
 			this._duration = duration;
 			StartCoroutine ("_growCoroutine");
+			StartCoroutine ("_moveCoroutine");
 		}
 
 		public void blockDie(Vector2 position, float duration) {

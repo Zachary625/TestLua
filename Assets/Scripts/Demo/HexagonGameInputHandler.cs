@@ -23,7 +23,6 @@ public class HexagonGameInputHandler : UIBehaviour, IBeginDragHandler, IDragHand
 	}
 
 	public void OnDrag(PointerEventData data) {
-		
 	}
 
 	public void OnEndDrag(PointerEventData data) {
