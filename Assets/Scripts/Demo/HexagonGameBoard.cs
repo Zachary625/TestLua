@@ -10,12 +10,13 @@ namespace HexagonGame {
 	[System.Serializable]
 	public class HexagonGameBoard : MonoBehaviour {
 		public enum Direction {
-			OClock_2,
-			OClock_12,
-			OClock_10,
-			OClock_8,
-			OClock_6,
-			OClock_4,
+			None = -1,
+			OClock_2 = 0,
+			OClock_12 = 1,
+			OClock_10 = 2,
+			OClock_8 = 3,
+			OClock_6 = 4,
+			OClock_4 = 5,
 		}
 
 		private static readonly Vector2[] _sideVertexPositions = new Vector2[] {
@@ -76,12 +77,31 @@ namespace HexagonGame {
 
 		public HexagonGameCellProperties CellProperties = new HexagonGameCellProperties();
 
+		private struct GotoPhaseParams
+		{
+			public HexagonGameBoardPhase phase;
+			public float time;
+			public GotoPhaseParams(HexagonGameBoardPhase phase, float time) {
+				this.phase = phase;
+				this.time = time;
+			}
+		}
+
 		private Vector2[] _cellPositions;
 		private int[,] _cellAdjacency;
+
 		private int[] _blockStatusFront;
 		private int[] _blockStatusBack;
+
 		private GameObject[] _blockGameObjects;
-		private List<int> _emptyCells = new List<int>();
+
+		private Direction _moveDirection = Direction.None;
+
+		// key: direction
+		// value:
+		// 		key: cell index at the beginning of a line
+		//		value: cell indices on the line, in reverse order
+		private Dictionary<Direction, Dictionary<int, List<int>>> _cellsByDirections = new Dictionary<Direction, Dictionary<int, List<int>>>();
 
 		public enum HexagonGameBoardPhase {
 			None,
@@ -110,7 +130,11 @@ namespace HexagonGame {
 
 		// Use this for initialization
 		void Start () {
+			this._destroyBlocks ();
+			this._blockGameObjects = new GameObject[this.BoardProperties.Cells];
 
+			this._initCells ();
+			this._gotoPhase(HexagonGameBoardPhase.Generating);
 		}
 
 		// Update is called once per frame
@@ -144,6 +168,15 @@ namespace HexagonGame {
 			}
 		}
 
+		private void _gotoPhaseCoroutine(HexagonGameBoardPhase phase, float time) {
+			StartCoroutine ("__gotoPhase", new GotoPhaseParams (phase, time));
+		}
+
+		private IEnumerator __gotoPhase(GotoPhaseParams param) {
+			yield return new WaitForSeconds (param.time);
+			this._gotoPhase (param.phase);
+		}
+
 		private void _gotoPhase(HexagonGameBoardPhase phase) {
 			this._exitPhase (this._phase);
 			this._phase = phase;
@@ -155,7 +188,18 @@ namespace HexagonGame {
 		}
 
 		private void _enterPhase(HexagonGameBoardPhase phase) {
-
+			switch (phase) {
+			case HexagonGameBoardPhase.Generating:
+				{
+					this._initBlocks ();
+				}
+				break;
+			case HexagonGameBoardPhase.Moving:
+				{
+					this._moveBlocks (this._moveDirection);
+				}
+				break;
+			}
 		}
 
 		private void _destroyCells() {
@@ -183,14 +227,16 @@ namespace HexagonGame {
 			this._blockStatusBack = new int[this.BoardProperties.Cells];
 
 			for (int index = 0; index < this.BoardProperties.Cells; index++) {
+				this._blockStatusFront [index] = -1;
+				this._blockStatusBack [index] = -1;
 				for(int direction = 0; direction < 6; direction++) {
 					this._cellAdjacency [index, direction] = -1;
 				}
-				this._emptyCells.Add (index);
 				this._initCell (index);
 			}
 
 			for (int cellIndex = 0; cellIndex < this.BoardProperties.Cells; cellIndex++) {
+
 				for (int adjacentIndex = cellIndex + 1; adjacentIndex < this.BoardProperties.Cells; adjacentIndex++) {
 					Vector2 bias = this._cellPositions [adjacentIndex] - this._cellPositions [cellIndex];
 					float distance = Mathf.Abs (bias.magnitude - (2 * this.BoardProperties.CellSize * Mathf.Sin(Mathf.Deg2Rad * 60) + this.BoardProperties.CellGap));
@@ -210,6 +256,53 @@ namespace HexagonGame {
 					}
 				}
 			}
+
+			this._cellsByDirections.Clear ();
+			for (int cellIndex = 0; cellIndex < this.BoardProperties.Cells; cellIndex++) {
+				for (int direction = 0; direction < 6; direction++) {
+					Direction eDirection = (Direction)direction;
+
+					int directionOpposite = (direction + 3) % 6;
+					Direction eDirectionOpposite = (Direction)directionOpposite;
+
+					int borderIndex = cellIndex;
+					while (true) {
+						int testIndex = this._cellAdjacency [borderIndex, direction];
+						if (testIndex != -1) {
+							borderIndex = testIndex;
+						} else {
+							break;
+						}
+					}
+
+					if (!this._cellsByDirections.ContainsKey(eDirection)) {
+						this._cellsByDirections.Add (eDirection, new Dictionary<int, List<int>> ());
+					}
+
+					if (!this._cellsByDirections [eDirection].ContainsKey(borderIndex)) {
+						this._cellsByDirections [eDirection].Add (borderIndex, new List<int>());
+
+						string logText = "";
+
+						int adjacentIndex = borderIndex;
+						this._cellsByDirections [eDirection] [borderIndex].Add (adjacentIndex);
+						logText += adjacentIndex;
+						while (true) {
+							int testIndex = this._cellAdjacency [adjacentIndex, directionOpposite];
+							if (testIndex != -1) {
+								adjacentIndex = testIndex;
+								this._cellsByDirections [eDirection] [borderIndex].Add (adjacentIndex);
+								logText += (", " + adjacentIndex);
+							} else {
+								break;
+							}
+						}
+						Debug.Log (" @ HexagonGameBoard._initCells(): this._cellsByDirection[" + eDirection + "][" + borderIndex + "]: " + logText);
+					}
+				}
+			}
+
+
 		}
 
 		private void _initCell(int index) {
@@ -261,12 +354,27 @@ namespace HexagonGame {
 		private void _initBlocks() {
 			this._blocksAnchor = this.transform.Find ("BlocksAnchor").gameObject;
 
-			// todo
-			for(int num = 0; num < this.BoardProperties.NewsPerMove; num++) {
-				int newIndex = this._emptyCells[Random.Range(0, this._emptyCells.Count)];
-				this._emptyCells.Remove (newIndex);
-				this._initBlock (newIndex);
+			List<int> emptyCells = new List<int> ();
+			for (int cellIndex = 0; cellIndex < this._blockStatusFront.Length; cellIndex++) {
+				if (this._blockStatusFront [cellIndex] < 0) {
+					emptyCells.Add (cellIndex);
+				}
 			}
+
+			if (emptyCells.Count == 0) {
+				Debug.Log (" @ HexagonGameBoard._initBlocks(): board is full!");
+				return;
+			}
+
+			for(int num = 0; num < this.BoardProperties.NewsPerMove; num++) {
+				if (emptyCells.Count > 0) {
+					int newIndex = emptyCells[Random.Range(0, emptyCells.Count)];
+					emptyCells.Remove (newIndex);
+					this._initBlock (newIndex);
+				}
+			}
+
+			this._gotoPhaseCoroutine (HexagonGameBoardPhase.Waiting, this.BoardProperties.GenerateTime);
 		}
 
 		private void _initBlock(int index) {
@@ -279,6 +387,7 @@ namespace HexagonGame {
 			blockRectTransform.SetParent (this._blocksAnchor.transform);
 
 			HexagonGameBlock blockComponent = blockGameObject.AddComponent<HexagonGameBlock> ();
+			blockComponent.UnitNum = this.BoardProperties.UnitNum;
 
 			RawImage cellMaskImage = blockGameObject.AddComponent<RawImage> ();
 			cellMaskImage.texture = this.CellProperties.MaskImage;
@@ -291,6 +400,7 @@ namespace HexagonGame {
 			blockRectTransform.offsetMax = position + this._cellSize / 2;
 
 			GameObject blockBackgroundGameObject = new GameObject ();
+			blockBackgroundGameObject.name = "BlockBackground";
 			RectTransform blockBgRectTransform = blockBackgroundGameObject.AddComponent<RectTransform> ();
 			blockBgRectTransform.SetParent (blockRectTransform);
 			blockBgRectTransform.anchorMin = Vector2.zero;
@@ -303,6 +413,7 @@ namespace HexagonGame {
 			blockBgImage.color = Color.Lerp(this.CellProperties.BlockBgMinColor, this.CellProperties.BlockBgMaxColor, blockComponent.Times * 1.0f / this.BoardProperties.RequireTimes);
 
 			GameObject blockTextGameObject = new GameObject ();
+			blockTextGameObject.name = "BlockText";
 			RectTransform blockTextRectTransform = blockTextGameObject.AddComponent<RectTransform> ();
 			blockTextRectTransform.SetParent (blockRectTransform);
 			blockTextRectTransform.anchorMin = Vector2.zero;
@@ -319,6 +430,74 @@ namespace HexagonGame {
 			blockText.alignment = TextAnchor.MiddleCenter;
 			blockText.text = "" + getBlockNum (this.BoardProperties.UnitNum, blockComponent.Times);
 
+			this._blockStatusFront [index] = blockComponent.Times;
+			blockComponent.blockBorn (this._cellPositions[index], this.BoardProperties.GenerateTime);
+		}
+
+		private void _moveBlocks(Direction direction) {
+			string frontText = "";
+
+			for (int cellIndex = 0; cellIndex < this.BoardProperties.Cells;cellIndex++) {
+				int value = this._blockStatusFront [cellIndex];
+				this._blockStatusBack [cellIndex] = this._blockStatusFront [cellIndex];
+				frontText += value + ", ";
+			}
+			Debug.Log (" @ HexagonGameBoard._moveBlocks(): frontText: " + frontText);
+
+ 			Dictionary<int, List<int>> lines = this._cellsByDirections [direction];
+			// for each line
+			// figure out how to change
+			foreach(KeyValuePair<int, List<int>> pair in lines) {
+				// compacted indices of the line
+				List<int> compacted = new List<int> ();
+				string compactedText = "";
+				foreach (int cellIndex in pair.Value) {
+					if (this._blockStatusFront [cellIndex] != -1) {
+						compacted.Add (cellIndex);
+						compactedText += cellIndex + ", ";
+					}
+				}
+				Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): compactedText: " + compactedText);
+				for (int lineIndex = 0; lineIndex < compacted.Count; lineIndex++) {
+					Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): lineIndex: " + lineIndex);
+					Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): pair.Value[lineIndex]: " + pair.Value[lineIndex]);
+					Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): compacted [lineIndex]: " + compacted [lineIndex]);
+					Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): this._blockGameObjects [compacted[lineIndex]]: " + (this._blockGameObjects [compacted[lineIndex]] != null));
+
+					if(compacted[lineIndex] != pair.Value[lineIndex]) {
+						this._blockStatusBack [pair.Value[lineIndex]] = this._blockStatusFront [compacted[lineIndex]];
+						this._blockStatusBack [compacted[lineIndex]] = -1;
+
+						this._blockGameObjects [pair.Value [lineIndex]] = this._blockGameObjects [compacted [lineIndex]];
+						this._blockGameObjects [compacted [lineIndex]] = null;
+
+					}
+
+					if ((lineIndex < compacted.Count - 1) && this._blockStatusFront [compacted [lineIndex]] == this._blockStatusFront [compacted [lineIndex + 1]]) {
+						this._blockStatusBack [pair.Value[lineIndex]]++;
+						this._blockStatusBack [compacted [lineIndex + 1]] = -1;
+
+						this._blockGameObjects [pair.Value[lineIndex]].GetComponent<HexagonGameBlock> ().blockGrow (this._cellPositions[pair.Value[lineIndex]], this.BoardProperties.MoveTime);
+
+						Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): compacted [lineIndex + 1]: " + compacted [lineIndex + 1]);
+						Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): this._blockGameObjects [compacted [lineIndex + 1]]: " + (this._blockGameObjects [compacted [lineIndex + 1]] != null));
+
+						this._blockGameObjects [compacted [lineIndex + 1]].GetComponent<HexagonGameBlock> ().blockDie (this._cellPositions[pair.Value[lineIndex]], this.BoardProperties.MoveTime);
+						this._blockGameObjects [compacted [lineIndex + 1]] = null;
+
+						compacted.RemoveAt(lineIndex + 1);
+					}
+					else {
+						this._blockGameObjects [pair.Value[lineIndex]].GetComponent<HexagonGameBlock> ().blockMove (this._cellPositions[pair.Value[lineIndex]], this.BoardProperties.MoveTime);
+					}
+				}
+			}
+
+			int[] blockStatusFront = this._blockStatusFront;
+			this._blockStatusFront = this._blockStatusBack;
+			this._blockStatusBack = blockStatusFront;
+
+			this._gotoPhaseCoroutine (HexagonGameBoardPhase.Generating, this.BoardProperties.MoveTime);
 		}
 
 		public Vector2 getPositionForHexagon(int index) {
@@ -360,13 +539,23 @@ namespace HexagonGame {
 					direction = side;
 				}
 			}
-			if (angle < 7) {
-				Debug.Log (" @ HexagonGameBoard.HandleDrag(): " + ((Direction)direction).ToString());
+			if (angle > 7) {
+				return;
 			}
+
+			if(this._phase != HexagonGameBoardPhase.Waiting) {
+				return;
+			}
+
+			this._moveDirection = (Direction)direction;
+			this._gotoPhase (HexagonGameBoardPhase.Moving);
 		}
 
 		public static int getBlockNum(int unit, int times) {
 			return unit * (int)Mathf.Pow (2, times);
 		}
+
+
+
 	}
 }
