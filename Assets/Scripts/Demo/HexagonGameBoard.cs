@@ -361,11 +361,6 @@ namespace HexagonGame {
 				}
 			}
 
-			if (emptyCells.Count == 0) {
-				Debug.Log (" @ HexagonGameBoard._initBlocks(): board is full!");
-				return;
-			}
-
 			for(int num = 0; num < this.BoardProperties.NewsPerMove; num++) {
 				if (emptyCells.Count > 0) {
 					int newIndex = emptyCells[Random.Range(0, emptyCells.Count)];
@@ -539,7 +534,7 @@ namespace HexagonGame {
 					direction = side;
 				}
 			}
-			if (angle > 7) {
+			if (angle > 10) {
 				return;
 			}
 
