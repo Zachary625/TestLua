@@ -383,6 +383,9 @@ namespace HexagonGame {
 
 			HexagonGameBlock blockComponent = blockGameObject.AddComponent<HexagonGameBlock> ();
 			blockComponent.UnitNum = this.BoardProperties.UnitNum;
+			blockComponent.MaxTimes = this.BoardProperties.RequireTimes;
+			blockComponent.MinBgColor = this.CellProperties.BlockBgMinColor;
+			blockComponent.MaxBgColor = this.CellProperties.BlockBgMaxColor;
 
 			RawImage cellMaskImage = blockGameObject.AddComponent<RawImage> ();
 			cellMaskImage.texture = this.CellProperties.MaskImage;
