@@ -433,14 +433,14 @@ namespace HexagonGame {
 		}
 
 		private void _moveBlocks(Direction direction) {
-			string frontText = "";
+//			string frontText = "";
 
 			for (int cellIndex = 0; cellIndex < this.BoardProperties.Cells;cellIndex++) {
-				int value = this._blockStatusFront [cellIndex];
+//				int value = this._blockStatusFront [cellIndex];
 				this._blockStatusBack [cellIndex] = this._blockStatusFront [cellIndex];
-				frontText += value + ", ";
+//				frontText += value + ", ";
 			}
-			Debug.Log (" @ HexagonGameBoard._moveBlocks(): frontText: " + frontText);
+//			Debug.Log (" @ HexagonGameBoard._moveBlocks(): frontText: " + frontText);
 
  			Dictionary<int, List<int>> lines = this._cellsByDirections [direction];
 			// for each line
@@ -448,19 +448,19 @@ namespace HexagonGame {
 			foreach(KeyValuePair<int, List<int>> pair in lines) {
 				// compacted indices of the line
 				List<int> compacted = new List<int> ();
-				string compactedText = "";
+//				string compactedText = "";
 				foreach (int cellIndex in pair.Value) {
 					if (this._blockStatusFront [cellIndex] != -1) {
 						compacted.Add (cellIndex);
-						compactedText += cellIndex + ", ";
+//						compactedText += cellIndex + ", ";
 					}
 				}
-				Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): compactedText: " + compactedText);
+//				Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): compactedText: " + compactedText);
 				for (int lineIndex = 0; lineIndex < compacted.Count; lineIndex++) {
-					Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): lineIndex: " + lineIndex);
-					Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): pair.Value[lineIndex]: " + pair.Value[lineIndex]);
-					Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): compacted [lineIndex]: " + compacted [lineIndex]);
-					Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): this._blockGameObjects [compacted[lineIndex]]: " + (this._blockGameObjects [compacted[lineIndex]] != null));
+//					Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): lineIndex: " + lineIndex);
+//					Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): pair.Value[lineIndex]: " + pair.Value[lineIndex]);
+//					Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): compacted [lineIndex]: " + compacted [lineIndex]);
+//					Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): this._blockGameObjects [compacted[lineIndex]]: " + (this._blockGameObjects [compacted[lineIndex]] != null));
 
 					if(compacted[lineIndex] != pair.Value[lineIndex]) {
 						this._blockStatusBack [pair.Value[lineIndex]] = this._blockStatusFront [compacted[lineIndex]];
@@ -477,8 +477,8 @@ namespace HexagonGame {
 
 						this._blockGameObjects [pair.Value[lineIndex]].GetComponent<HexagonGameBlock> ().blockGrow (this._cellPositions[pair.Value[lineIndex]], this.BoardProperties.MoveTime);
 
-						Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): compacted [lineIndex + 1]: " + compacted [lineIndex + 1]);
-						Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): this._blockGameObjects [compacted [lineIndex + 1]]: " + (this._blockGameObjects [compacted [lineIndex + 1]] != null));
+//						Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): compacted [lineIndex + 1]: " + compacted [lineIndex + 1]);
+//						Debug.Log (" @ HexagonGameBoard._moveBlocks(" + direction + "): this._blockGameObjects [compacted [lineIndex + 1]]: " + (this._blockGameObjects [compacted [lineIndex + 1]] != null));
 
 						this._blockGameObjects [compacted [lineIndex + 1]].GetComponent<HexagonGameBlock> ().blockDie (this._cellPositions[pair.Value[lineIndex]], this.BoardProperties.MoveTime);
 						this._blockGameObjects [compacted [lineIndex + 1]] = null;
