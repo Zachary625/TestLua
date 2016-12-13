@@ -123,18 +123,17 @@ namespace HexagonGame {
 		private GameObject _cellsAnchor;
 		private GameObject _blocksAnchor;
 
+		public HexagonGameGUI GUI;
+
 		private Vector2 _cellSize;
 
 		void Awake() {
+			
 		}
 
 		// Use this for initialization
 		void Start () {
-			this._destroyBlocks ();
-			this._blockGameObjects = new GameObject[this.BoardProperties.Cells];
-
-			this._initCells ();
-			this._gotoPhase(HexagonGameBoardPhase.Generating);
+			this._resetGameBoard ();			
 		}
 
 		// Update is called once per frame
@@ -183,20 +182,61 @@ namespace HexagonGame {
 			this._enterPhase (this._phase);
 		}
 
-		private void _exitPhase(HexagonGameBoardPhase phase) {
+		private void _setTouchable(bool touchable) {
+			RawImage bgImage = this.GetComponent<RawImage> ();
+			bgImage.raycastTarget = touchable;
+		}
 
+		private void _exitPhase(HexagonGameBoardPhase phase) {
+			switch (phase) {
+			case HexagonGameBoardPhase.None:
+				{
+					this._setTouchable (true);
+				}
+				break;
+			}
 		}
 
 		private void _enterPhase(HexagonGameBoardPhase phase) {
 			switch (phase) {
+			case HexagonGameBoardPhase.None:
+				{
+					this._setTouchable (false);
+				}
+				break;
 			case HexagonGameBoardPhase.Generating:
 				{
+					if (this._checkWin ()) {
+						return;
+					}
+
 					this._initBlocks ();
+
+					this._gotoPhaseCoroutine (HexagonGameBoardPhase.Waiting, this.BoardProperties.GenerateTime);
 				}
 				break;
 			case HexagonGameBoardPhase.Moving:
 				{
 					this._moveBlocks (this._moveDirection);
+				}
+				break;
+			case HexagonGameBoardPhase.Waiting:
+				{
+					if (this._checkLose ()) {
+						return;
+					}
+				}
+				break;
+			case HexagonGameBoardPhase.Win:
+				{
+					this.GUI.SendMessage ("OnGameFinish", true);
+					this._setTouchable (false);
+				}
+				break;
+			case HexagonGameBoardPhase.Lose:
+				{
+					this.GUI.SendMessage ("OnGameFinish", false);
+					this._setTouchable (false);
 				}
 				break;
 			}
@@ -297,12 +337,10 @@ namespace HexagonGame {
 								break;
 							}
 						}
-						Debug.Log (" @ HexagonGameBoard._initCells(): this._cellsByDirection[" + eDirection + "][" + borderIndex + "]: " + logText);
+//						Debug.Log (" @ HexagonGameBoard._initCells(): this._cellsByDirection[" + eDirection + "][" + borderIndex + "]: " + logText);
 					}
 				}
 			}
-
-
 		}
 
 		private void _initCell(int index) {
@@ -333,6 +371,7 @@ namespace HexagonGame {
 			cellBgRectTransform.offsetMax = Vector2.zero;
 
 			RawImage cellBgImage = cellBackgroundGameObject.AddComponent<RawImage> ();
+			cellBgImage.raycastTarget = false;
 			cellBgImage.texture = this.CellProperties.CellBgImage;
 			cellBgImage.color = this.CellProperties.CellBgColor;
 		}
@@ -368,8 +407,6 @@ namespace HexagonGame {
 					this._initBlock (newIndex);
 				}
 			}
-
-			this._gotoPhaseCoroutine (HexagonGameBoardPhase.Waiting, this.BoardProperties.GenerateTime);
 		}
 
 		private void _initBlock(int index) {
@@ -388,6 +425,7 @@ namespace HexagonGame {
 			blockComponent.MaxBgColor = this.CellProperties.BlockBgMaxColor;
 
 			RawImage cellMaskImage = blockGameObject.AddComponent<RawImage> ();
+			cellMaskImage.raycastTarget = false;
 			cellMaskImage.texture = this.CellProperties.MaskImage;
 
 			Mask cellMask = blockGameObject.AddComponent<Mask> ();
@@ -407,6 +445,7 @@ namespace HexagonGame {
 			blockBgRectTransform.offsetMax = Vector2.zero;
 
 			RawImage blockBgImage = blockBackgroundGameObject.AddComponent<RawImage> ();
+			blockBgImage.raycastTarget = false;
 			blockBgImage.texture = this.CellProperties.BlockBgImage;
 			blockBgImage.color = Color.Lerp(this.CellProperties.BlockBgMinColor, this.CellProperties.BlockBgMaxColor, blockComponent.Times * 1.0f / this.BoardProperties.RequireTimes);
 
@@ -498,6 +537,31 @@ namespace HexagonGame {
 			this._gotoPhaseCoroutine (HexagonGameBoardPhase.Generating, this.BoardProperties.MoveTime);
 		}
 
+		private bool _checkWin() {
+			foreach (int times in this._blockStatusFront) {
+				if (times >= this.BoardProperties.RequireTimes) {
+					this._gotoPhase(HexagonGameBoardPhase.Win);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private bool _checkLose() {
+			foreach (KeyValuePair<Direction, Dictionary<int, List<int>>> directionPair in this._cellsByDirections) {
+				foreach (KeyValuePair<int, List<int>> linePair in directionPair.Value) {
+					for (int lineIndex = 0; lineIndex < linePair.Value.Count - 1; lineIndex++) {
+						if (this._blockStatusFront [linePair.Value [lineIndex]] == this._blockStatusFront [linePair.Value [lineIndex + 1]]) {
+//							Debug.Log (linePair.Value[lineIndex] + " == " + linePair.Value [lineIndex + 1]);
+							return false;
+						}
+					}
+				}				
+			}
+			this._gotoPhase (HexagonGameBoardPhase.Lose);
+			return true;
+		}
+
 		public Vector2 getPositionForHexagon(int index) {
 			if (index == 0) {
 				return Vector2.zero;
@@ -553,7 +617,22 @@ namespace HexagonGame {
 			return unit * (int)Mathf.Pow (2, times);
 		}
 
+		public void GameBoardStart() {
+			this._resetGameBoard ();
+			this._gotoPhase(HexagonGameBoardPhase.Generating);
+		}
 
+		public void GameBoardFinish() {
+			this._resetGameBoard ();
+		}
+
+		private void _resetGameBoard() {
+			this._destroyBlocks ();
+			this._blockGameObjects = new GameObject[this.BoardProperties.Cells];
+			this._initCells ();
+
+			this._gotoPhase (HexagonGameBoardPhase.None);
+		}
 
 	}
 }
