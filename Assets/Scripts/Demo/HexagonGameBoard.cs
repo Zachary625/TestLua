@@ -601,7 +601,7 @@ namespace HexagonGame {
 					direction = side;
 				}
 			}
-			if (angle > 10) {
+			if (angle > 13) {
 				return;
 			}
 
